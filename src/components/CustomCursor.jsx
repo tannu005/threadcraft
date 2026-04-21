@@ -31,28 +31,51 @@ export default function CustomCursor() {
       rafRef.current = requestAnimationFrame(animate)
     }
 
-    const onEnter = () => {
-      cursor.classList.add('cursor-hover')
-      follower.classList.add('cursor-follower-hover')
+    const onEnter = (e) => {
+      const type = e.currentTarget.getAttribute('data-cursor')
+      if (type === 'drag') {
+        cursor.classList.add('opacity-0')
+        follower.classList.add('cursor-drag')
+      } else {
+        cursor.classList.add('cursor-hover')
+        follower.classList.add('cursor-follower-hover')
+      }
     }
     const onLeave = () => {
-      cursor.classList.remove('cursor-hover')
-      follower.classList.remove('cursor-follower-hover')
+      cursor.classList.remove('cursor-hover', 'opacity-0')
+      follower.classList.remove('cursor-follower-hover', 'cursor-drag')
     }
 
     window.addEventListener('mousemove', onMove, { passive: true })
     rafRef.current = requestAnimationFrame(animate)
 
-    // Interactive elements
-    const interactables = document.querySelectorAll('a, button, [data-cursor]')
-    interactables.forEach(el => {
-      el.addEventListener('mouseenter', onEnter)
-      el.addEventListener('mouseleave', onLeave)
+    // Dynamic interaction listener
+    const updateInteractables = () => {
+      const interactables = document.querySelectorAll('a, button, [data-cursor], .swatch')
+      interactables.forEach(el => {
+        el.addEventListener('mouseenter', onEnter)
+        el.addEventListener('mouseleave', onLeave)
+      })
+      return interactables
+    }
+
+    let interactables = updateInteractables()
+
+    // Mutation observer to handle dynamic content
+    const observer = new MutationObserver(() => {
+      interactables.forEach(el => {
+        el.removeEventListener('mouseenter', onEnter)
+        el.removeEventListener('mouseleave', onLeave)
+      })
+      interactables = updateInteractables()
     })
+
+    observer.observe(document.body, { childList: true, subtree: true })
 
     return () => {
       window.removeEventListener('mousemove', onMove)
       cancelAnimationFrame(rafRef.current)
+      observer.disconnect()
       interactables.forEach(el => {
         el.removeEventListener('mouseenter', onEnter)
         el.removeEventListener('mouseleave', onLeave)

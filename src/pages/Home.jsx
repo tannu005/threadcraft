@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform, useSpring, AnimatePresence, useInView 
 import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Loader from '../components/Loader'
+import HeroCanvas from '../components/HeroCanvas'
 
 // ─── Animated counter ─────────────────────────────────────────────────────────
 function AnimatedNumber({ value, suffix = '' }) {
@@ -46,6 +47,11 @@ function HeroSection() {
 
   return (
     <section ref={ref} className="relative min-h-screen flex items-center overflow-hidden">
+      {/* 3D Background */}
+      <div className="absolute inset-0 z-0 cursor-none" data-cursor="drag">
+        <HeroCanvas />
+      </div>
+
       {/* Parallax layered background */}
       <motion.div style={{ y }} className="absolute inset-0 pointer-events-none">
         {/* Large acid orb */}

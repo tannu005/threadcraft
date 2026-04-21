@@ -4,6 +4,8 @@ import useStore from '../context/store'
 import ColorPanel from './panels/ColorPanel'
 import TexturePanel from './panels/TexturePanel'
 import AIPanel from './panels/AIPanel'
+import DecalPanel from './panels/DecalPanel'
+import EnvPanel from './panels/EnvPanel'
 
 const TABS = [
   {
@@ -27,6 +29,15 @@ const TABS = [
     )
   },
   {
+    id: 'decals', label: 'DECALS',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" className="w-5 h-5">
+        <circle cx="10" cy="10" r="4" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M10 2v4M10 14v4M2 10h4M14 10h4" stroke="currentColor" strokeWidth="1.5" opacity="0.5" />
+      </svg>
+    )
+  },
+  {
     id: 'ai', label: 'AI GEN',
     icon: (
       <svg viewBox="0 0 20 20" fill="none" className="w-5 h-5">
@@ -35,12 +46,24 @@ const TABS = [
       </svg>
     )
   },
+  {
+    id: 'environment', label: 'SCENE',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" className="w-5 h-5">
+        <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M10 3v14M3 10h14" stroke="currentColor" strokeWidth="1" opacity="0.4" />
+        <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1" opacity="0.4" />
+      </svg>
+    )
+  },
 ]
 
 const PANEL_MAP = {
-  color:   <ColorPanel />,
-  texture: <TexturePanel />,
-  ai:      <AIPanel />,
+  color:       <ColorPanel />,
+  texture:     <TexturePanel />,
+  decals:      <DecalPanel />,
+  ai:          <AIPanel />,
+  environment: <EnvPanel />,
 }
 
 export default function Sidebar() {

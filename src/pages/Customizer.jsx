@@ -158,7 +158,7 @@ export default function Customizer() {
         <div className="flex-1 flex flex-col overflow-hidden">
           <Toolbar canvasRef={canvasRef} />
 
-          <div ref={canvasRef} className="flex-1 relative">
+          <div ref={canvasRef} className="flex-1 relative cursor-none" data-cursor="drag">
             <Suspense fallback={<CanvasLoader />}>
               <Scene />
             </Suspense>

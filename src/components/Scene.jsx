@@ -7,6 +7,7 @@ import {
   ContactShadows,
   Center,
   Sparkles,
+  Decal,
 } from '@react-three/drei'
 import * as THREE from 'three'
 import useStore from '../context/store'
@@ -19,7 +20,7 @@ function TShirtModel() {
   const rightSleeveRef = useRef(null)
   const collarRef = useRef(null)
 
-  const { color, texture, roughness, metalness, envMapIntensity } = useStore()
+  const { color, texture, roughness, metalness, envMapIntensity, decals } = useStore()
 
   // Shared material config
   const matProps = {
@@ -57,52 +58,54 @@ function TShirtModel() {
   useFrame((state) => {
     if (!groupRef.current) return
     const t = state.clock.elapsedTime
-    groupRef.current.position.y = Math.sin(t * 0.7) * 0.12 + Math.sin(t * 0.3) * 0.06
-    groupRef.current.rotation.y = Math.sin(t * 0.25) * 0.08
-    groupRef.current.rotation.z = Math.sin(t * 0.4) * 0.015
+    groupRef.current.position.y = Math.sin(t * 0.7) * 0.08 + Math.sin(t * 0.3) * 0.04
+    groupRef.current.rotation.y = Math.sin(t * 0.2) * 0.05
   })
 
-  // No GLTF — using premium procedural fallback
-  // To use a real model, place tshirt.glb in /public/models/ and uncomment useGLTF
-
-  // Premium procedural tshirt fallback
+  // Refined procedural T-shirt geometry
+  // We'll use a slightly more complex shape with rounded edges (via box args)
   return (
     <group ref={groupRef}>
       {/* Body */}
       <mesh ref={bodyRef} castShadow receiveShadow position={[0, 0, 0]}>
-        <boxGeometry args={[2.4, 3.0, 0.14, 12, 12]} />
+        <boxGeometry args={[2.4, 3.2, 0.25, 32, 32, 1]} />
         <meshStandardMaterial {...matProps} />
+        
+        {/* Render Decals on the body */}
+        {decals.map((decal) => (
+          <Decal
+            key={decal.id}
+            position={decal.position || [0, 0.2, 0.13]}
+            rotation={decal.rotation || [0, 0, 0]}
+            scale={decal.scale || [0.8, 0.8, 0.8]}
+            map={decal.texture}
+          />
+        ))}
       </mesh>
 
-      {/* Left sleeve — angled */}
-      <mesh ref={leftSleeveRef} castShadow position={[-1.62, 0.9, 0]} rotation={[0, 0, Math.PI / 7]}>
-        <boxGeometry args={[1.0, 0.65, 0.12, 6, 4]} />
+      {/* Left sleeve */}
+      <mesh ref={leftSleeveRef} castShadow position={[-1.5, 0.95, 0]} rotation={[0, 0, 0.45]}>
+        <boxGeometry args={[1.1, 0.7, 0.22, 12, 8, 1]} />
         <meshStandardMaterial {...matProps} />
       </mesh>
 
       {/* Right sleeve */}
-      <mesh ref={rightSleeveRef} castShadow position={[1.62, 0.9, 0]} rotation={[0, 0, -Math.PI / 7]}>
-        <boxGeometry args={[1.0, 0.65, 0.12, 6, 4]} />
+      <mesh ref={rightSleeveRef} castShadow position={[1.5, 0.95, 0]} rotation={[0, 0, -0.45]}>
+        <boxGeometry args={[1.1, 0.7, 0.22, 12, 8, 1]} />
         <meshStandardMaterial {...matProps} />
       </mesh>
 
-      {/* Collar */}
-      <mesh ref={collarRef} position={[0, 1.5, 0.02]}>
-        <torusGeometry args={[0.42, 0.09, 10, 28, Math.PI]} />
-        <meshStandardMaterial color={color} roughness={Math.min(roughness + 0.15, 1)} metalness={metalness * 0.5} envMapIntensity={envMapIntensity * 0.8} />
-      </mesh>
-
-      {/* Bottom hem detail */}
-      <mesh position={[0, -1.52, 0.01]}>
-        <boxGeometry args={[2.42, 0.06, 0.15]} />
-        <meshStandardMaterial color={color} roughness={roughness + 0.1} />
+      {/* Collar (Refined) */}
+      <mesh ref={collarRef} position={[0, 1.6, 0.02]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.45, 0.08, 16, 40]} />
+        <meshStandardMaterial color={color} roughness={0.7} metalness={0.1} />
       </mesh>
     </group>
   )
 }
 
 // ─── Advanced Particle System ──────────────────────────────────────────────────
-function ParticleField({ count = 120 }) {
+function ParticleField({ count = 150 }) {
   const ref = useRef()
 
   const { positions, colors, sizes } = useMemo(() => {
@@ -117,10 +120,9 @@ function ParticleField({ count = 120 }) {
     ]
 
     for (let i = 0; i < count; i++) {
-      // Distribute in a sphere
       const theta = Math.random() * Math.PI * 2
       const phi = Math.acos(2 * Math.random() - 1)
-      const r = 4 + Math.random() * 5
+      const r = 3.5 + Math.random() * 6
 
       positions[i * 3] = r * Math.sin(phi) * Math.cos(theta)
       positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
@@ -131,15 +133,15 @@ function ParticleField({ count = 120 }) {
       colors[i * 3 + 1] = c.g
       colors[i * 3 + 2] = c.b
 
-      sizes[i] = Math.random() * 0.025 + 0.008
+      sizes[i] = Math.random() * 0.03 + 0.01
     }
     return { positions, colors, sizes }
   }, [count])
 
   useFrame((_, delta) => {
     if (ref.current) {
-      ref.current.rotation.y += delta * 0.018
-      ref.current.rotation.x += delta * 0.006
+      ref.current.rotation.y += delta * 0.02
+      ref.current.rotation.z += delta * 0.01
     }
   })
 
@@ -153,9 +155,10 @@ function ParticleField({ count = 120 }) {
       <pointsMaterial
         vertexColors
         transparent
-        opacity={0.55}
+        opacity={0.4}
         sizeAttenuation
         depthWrite={false}
+        blending={THREE.AdditiveBlending}
       />
     </points>
   )
@@ -169,40 +172,29 @@ function EnergyRings() {
   useFrame((state) => {
     const t = state.clock.elapsedTime
     if (ring1.current) {
-      ring1.current.rotation.x = t * 0.15
-      ring1.current.rotation.z = t * 0.08
-      ring1.current.material.opacity = 0.04 + Math.sin(t * 0.5) * 0.02
+      ring1.current.rotation.x = t * 0.12
+      ring1.current.rotation.z = t * 0.05
+      ring1.current.material.opacity = 0.03 + Math.sin(t * 0.4) * 0.01
     }
     if (ring2.current) {
-      ring2.current.rotation.x = -t * 0.1
-      ring2.current.rotation.y = t * 0.12
-      ring2.current.material.opacity = 0.03 + Math.sin(t * 0.4 + 1) * 0.02
+      ring2.current.rotation.x = -t * 0.08
+      ring2.current.rotation.y = t * 0.1
+      ring2.current.material.opacity = 0.02 + Math.sin(t * 0.3 + 2) * 0.01
     }
   })
 
   return (
     <>
       <mesh ref={ring1} position={[0, 0, 0]}>
-        <torusGeometry args={[3.2, 0.008, 4, 80]} />
-        <meshBasicMaterial color="#c8ff00" transparent opacity={0.05} depthWrite={false} />
+        <torusGeometry args={[3.5, 0.006, 8, 100]} />
+        <meshBasicMaterial color="#c8ff00" transparent opacity={0.04} depthWrite={false} />
       </mesh>
-      <mesh ref={ring2} position={[0, 0, 0]} rotation={[Math.PI / 3, 0, 0]}>
-        <torusGeometry args={[4.5, 0.006, 4, 80]} />
-        <meshBasicMaterial color="#00f0ff" transparent opacity={0.04} depthWrite={false} />
+      <mesh ref={ring2} position={[0, 0, 0]} rotation={[Math.PI / 4, 0, 0]}>
+        <torusGeometry args={[4.8, 0.004, 8, 100]} />
+        <meshBasicMaterial color="#00f0ff" transparent opacity={0.03} depthWrite={false} />
       </mesh>
     </>
   )
-}
-
-// ─── Animated background plane ─────────────────────────────────────────────────
-function BackgroundGrid() {
-  const meshRef = useRef()
-  useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.material.uniforms?.time?.value && (meshRef.current.material.uniforms.time.value = state.clock.elapsedTime)
-    }
-  })
-  return null // Handled via CSS
 }
 
 // ─── Camera rig for subtle drift ──────────────────────────────────────────────
@@ -212,22 +204,23 @@ function CameraDrift() {
 
   useFrame((state) => {
     const t = state.clock.elapsedTime
-    camera.position.x = basePos.current.x + Math.sin(t * 0.18) * 0.08
-    camera.position.y = basePos.current.y + Math.sin(t * 0.12) * 0.05
+    camera.position.x = basePos.current.x + Math.sin(t * 0.15) * 0.1
+    camera.position.y = basePos.current.y + Math.sin(t * 0.1) * 0.06
+    camera.lookAt(0, 0, 0)
   })
   return null
 }
 
 // ─── Main Scene ────────────────────────────────────────────────────────────────
 export default function Scene() {
-  const { autoRotate } = useStore()
+  const { autoRotate, environment } = useStore()
 
   return (
     <div className="canvas-container w-full h-full">
       <Canvas
         shadows
-        dpr={[1, 1.5]}
-        camera={{ position: [0, 0, 5.5], fov: 38, near: 0.1, far: 100 }}
+        dpr={[1, 2]}
+        camera={{ position: [0, 0, 5.5], fov: 40, near: 0.1, far: 100 }}
         gl={{
           preserveDrawingBuffer: true,
           antialias: true,
@@ -237,60 +230,48 @@ export default function Scene() {
         }}
       >
         {/* ── Lighting setup ── */}
-        <ambientLight intensity={0.25} />
+        <ambientLight intensity={0.3} />
 
         {/* Key light — warm */}
         <directionalLight
-          position={[4, 7, 4]}
-          intensity={2.0}
+          position={[5, 8, 5]}
+          intensity={1.8}
           castShadow
-          shadow-mapSize-width={1024}
-          shadow-mapSize-height={1024}
-          shadow-camera-near={0.5}
-          shadow-camera-far={20}
-          shadow-camera-left={-5}
-          shadow-camera-right={5}
-          shadow-camera-top={5}
-          shadow-camera-bottom={-5}
-          shadow-bias={-0.001}
-          color="#fff8f0"
+          shadow-mapSize={[1024, 1024]}
+          shadow-bias={-0.0001}
+          color="#fffaf4"
         />
 
         {/* Rim light — ice blue */}
-        <pointLight position={[-5, 2, -4]} intensity={1.2} color="#00f0ff" distance={15} decay={2} />
+        <pointLight position={[-6, 3, -4]} intensity={1.5} color="#00f0ff" distance={20} />
 
         {/* Fill light — acid */}
-        <pointLight position={[5, -2, 3]} intensity={0.6} color="#c8ff00" distance={10} decay={2} />
+        <pointLight position={[6, -3, 3]} intensity={0.8} color="#c8ff00" distance={15} />
 
-        {/* Back accent — ember */}
-        <pointLight position={[0, -4, -5]} intensity={0.4} color="#ff4d00" distance={12} decay={2} />
-
-        {/* Top spot */}
+        {/* Top spotlight */}
         <spotLight
-          position={[0, 9, 0]}
-          intensity={0.8}
-          angle={0.35}
-          penumbra={0.9}
+          position={[0, 10, 0]}
+          intensity={1.2}
+          angle={0.4}
+          penumbra={1}
           castShadow
-          shadow-bias={-0.001}
           color="#ffffff"
         />
 
         {/* ── Environment ── */}
-        <Environment preset="studio" background={false} />
+        <Environment preset={environment} background={false} />
 
         {/* ── Atmospheric elements ── */}
         <EnergyRings />
-        <ParticleField count={100} />
+        <ParticleField count={120} />
 
-        {/* ── Sparkles (drei built-in) ── */}
         <Sparkles
-          count={30}
-          size={1.5}
-          scale={[6, 6, 6]}
+          count={40}
+          size={1.8}
+          scale={[8, 8, 8]}
           color="#c8ff00"
-          speed={0.3}
-          opacity={0.3}
+          speed={0.4}
+          opacity={0.4}
         />
 
         {/* ── T-Shirt Model ── */}
@@ -302,11 +283,11 @@ export default function Scene() {
 
         {/* ── Ground shadow ── */}
         <ContactShadows
-          position={[0, -2.4, 0]}
-          opacity={0.65}
-          scale={10}
+          position={[0, -2.6, 0]}
+          opacity={0.7}
+          scale={12}
           blur={3}
-          far={5}
+          far={6}
           color="#000000"
         />
 
@@ -316,13 +297,13 @@ export default function Scene() {
         {/* ── Orbit Controls ── */}
         <OrbitControls
           enablePan={false}
-          minPolarAngle={Math.PI / 5}
-          maxPolarAngle={(4 * Math.PI) / 5}
-          minDistance={2.5}
-          maxDistance={10}
+          minPolarAngle={Math.PI / 4}
+          maxPolarAngle={(3 * Math.PI) / 4}
+          minDistance={3}
+          maxDistance={9}
           autoRotate={autoRotate}
-          autoRotateSpeed={0.8}
-          dampingFactor={0.08}
+          autoRotateSpeed={0.6}
+          dampingFactor={0.06}
           enableDamping
           makeDefault
         />

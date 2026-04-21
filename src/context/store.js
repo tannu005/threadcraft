@@ -10,7 +10,11 @@ const useStore = create((set) => ({
   roughness: 0.5,
   metalness: 0.1,
   envMapIntensity: 1.0,
-
+  environment: 'studio',  // 'studio' | 'sunset' | 'forest' | 'city' | 'night'
+  
+  // ─── Decals ───
+  decals: [], // { id, type, url, texture, position, rotation, scale }
+  
   // ─── AI generation ───
   prompt: '',
   aiStyle: 'streetwear',  // 'streetwear' | 'minimalist' | 'luxury' | 'cyber' | 'vintage'
@@ -18,7 +22,7 @@ const useStore = create((set) => ({
   generatedImages: [],    // history of generated image URLs
 
   // ─── UI state ───
-  activeTab: 'color',     // 'color' | 'texture' | 'ai'
+  activeTab: 'color',     // 'color' | 'texture' | 'ai' | 'decals' | 'environment'
   isLoading: false,
   showShare: false,
   error: null,
@@ -33,6 +37,12 @@ const useStore = create((set) => ({
   setRoughness: (roughness) => set({ roughness }),
   setMetalness: (metalness) => set({ metalness }),
   setEnvMapIntensity: (envMapIntensity) => set({ envMapIntensity }),
+  setEnvironment: (environment) => set({ environment }),
+  
+  addDecal: (decal) => set((state) => ({ decals: [...state.decals, decal] })),
+  removeDecal: (id) => set((state) => ({ decals: state.decals.filter(d => d.id !== id) })),
+  clearDecals: () => set({ decals: [] }),
+
   setPrompt: (prompt) => set({ prompt }),
   setAiStyle: (aiStyle) => set({ aiStyle }),
   setIsGenerating: (isGenerating) => set({ isGenerating }),
