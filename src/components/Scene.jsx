@@ -8,9 +8,29 @@ import {
   Center,
   Sparkles,
   Decal,
+  RoundedBox,
 } from '@react-three/drei'
 import * as THREE from 'three'
 import useStore from '../context/store'
+
+// ─── Text Texture Helper ──────────────────────────────────────────────────────
+function TextTexture({ text, font = 'Syne', color = '#ffffff' }) {
+  const canvas = useMemo(() => {
+    const c = document.createElement('canvas')
+    c.width = 1024
+    c.height = 1024
+    const ctx = c.getContext('2d')
+    ctx.clearRect(0, 0, 1024, 1024)
+    ctx.fillStyle = color
+    ctx.font = `bold 120px ${font}`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText(text, 512, 512)
+    return c
+  }, [text, font, color])
+
+  return <canvasTexture attach="map" image={canvas} />
+}
 
 // ─── Floating T-Shirt Model ────────────────────────────────────────────────────
 function TShirtModel() {
@@ -43,6 +63,7 @@ function TShirtModel() {
         mat.map = texture
         texture.wrapS = texture.wrapT = THREE.RepeatWrapping
         texture.repeat.set(1, 1)
+        texture.flipY = true // Fix upside down textures
         texture.needsUpdate = true
       } else {
         mat.map = null
@@ -67,33 +88,60 @@ function TShirtModel() {
   return (
     <group ref={groupRef}>
       {/* Body */}
-      <mesh ref={bodyRef} castShadow receiveShadow position={[0, 0, 0]}>
-        <boxGeometry args={[2.4, 3.2, 0.25, 32, 32, 1]} />
+      <RoundedBox 
+        ref={bodyRef} 
+        args={[2.4, 3.2, 0.4]} 
+        radius={0.15} 
+        smoothness={4} 
+        castShadow 
+        receiveShadow
+        position={[0, 0, 0]}
+      >
         <meshStandardMaterial {...matProps} />
         
         {/* Render Decals on the body */}
         {decals.map((decal) => (
           <Decal
             key={decal.id}
-            position={decal.position || [0, 0.2, 0.13]}
+            position={decal.position}
             rotation={decal.rotation || [0, 0, 0]}
-            scale={decal.scale || [0.8, 0.8, 0.8]}
+            scale={decal.scale}
             map={decal.texture}
-          />
+          >
+            {decal.type === 'text' && (
+              <meshStandardMaterial transparent polygonOffset polygonOffsetFactor={-1}>
+                <TextTexture text={decal.text} font={decal.font} color={decal.textColor} />
+              </meshStandardMaterial>
+            )}
+          </Decal>
         ))}
-      </mesh>
+      </RoundedBox>
 
       {/* Left sleeve */}
-      <mesh ref={leftSleeveRef} castShadow position={[-1.5, 0.95, 0]} rotation={[0, 0, 0.45]}>
-        <boxGeometry args={[1.1, 0.7, 0.22, 12, 8, 1]} />
+      <RoundedBox 
+        ref={leftSleeveRef} 
+        args={[1.1, 0.7, 0.35]} 
+        radius={0.1} 
+        smoothness={4} 
+        position={[-1.5, 0.95, 0]} 
+        rotation={[0, 0, 0.45]}
+        castShadow
+      >
         <meshStandardMaterial {...matProps} />
-      </mesh>
+      </RoundedBox>
 
       {/* Right sleeve */}
-      <mesh ref={rightSleeveRef} castShadow position={[1.5, 0.95, 0]} rotation={[0, 0, -0.45]}>
-        <boxGeometry args={[1.1, 0.7, 0.22, 12, 8, 1]} />
+      <RoundedBox 
+        ref={rightSleeveRef} 
+        args={[1.1, 0.7, 0.35]} 
+        radius={0.1} 
+        smoothness={4} 
+        position={[1.5, 0.95, 0]} 
+        rotation={[0, 0, -0.45]}
+        castShadow
+      >
         <meshStandardMaterial {...matProps} />
-      </mesh>
+      </RoundedBox>
 
       {/* Collar (Refined) */}
       <mesh ref={collarRef} position={[0, 1.6, 0.02]} rotation={[Math.PI / 2, 0, 0]}>
@@ -104,45 +152,84 @@ function TShirtModel() {
   )
 }
 
-// ─── Advanced Particle System ──────────────────────────────────────────────────
+// ─── Advanced Mouse-Reactive Particle System ──────────────────────────────────
 function ParticleField({ count = 150 }) {
   const ref = useRef()
+  const { mouse, viewport } = useThree()
 
-  const { positions, colors, sizes } = useMemo(() => {
+  const { positions, colors, sizes, originalPositions } = useMemo(() => {
     const positions = new Float32Array(count * 3)
+    const originalPositions = new Float32Array(count * 3)
     const colors = new Float32Array(count * 3)
     const sizes = new Float32Array(count)
 
     const colorOptions = [
-      new THREE.Color('#c8ff00'), // acid
-      new THREE.Color('#00f0ff'), // ice
-      new THREE.Color('#ff4d00'), // ember
+      new THREE.Color('#c8ff00'),
+      new THREE.Color('#00f0ff'),
+      new THREE.Color('#ff4d00'),
     ]
 
     for (let i = 0; i < count; i++) {
       const theta = Math.random() * Math.PI * 2
       const phi = Math.acos(2 * Math.random() - 1)
-      const r = 3.5 + Math.random() * 6
+      const r = 4 + Math.random() * 5
 
-      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta)
-      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
-      positions[i * 3 + 2] = r * Math.cos(phi)
+      const x = r * Math.sin(phi) * Math.cos(theta)
+      const y = r * Math.sin(phi) * Math.sin(theta)
+      const z = r * Math.cos(phi)
+
+      positions[i * 3] = x
+      positions[i * 3 + 1] = y
+      positions[i * 3 + 2] = z
+      
+      originalPositions[i * 3] = x
+      originalPositions[i * 3 + 1] = y
+      originalPositions[i * 3 + 2] = z
 
       const c = colorOptions[Math.floor(Math.random() * colorOptions.length)]
       colors[i * 3] = c.r
       colors[i * 3 + 1] = c.g
       colors[i * 3 + 2] = c.b
 
-      sizes[i] = Math.random() * 0.03 + 0.01
+      sizes[i] = Math.random() * 0.04 + 0.01
     }
-    return { positions, colors, sizes }
+    return { positions, colors, sizes, originalPositions }
   }, [count])
 
-  useFrame((_, delta) => {
-    if (ref.current) {
-      ref.current.rotation.y += delta * 0.02
-      ref.current.rotation.z += delta * 0.01
+  useFrame((state, delta) => {
+    if (!ref.current) return
+    const time = state.clock.elapsedTime
+    const points = ref.current.geometry.attributes.position.array
+
+    // Mouse interaction
+    const mx = (mouse.x * viewport.width) / 2
+    const my = (mouse.y * viewport.height) / 2
+
+    for (let i = 0; i < count; i++) {
+      const i3 = i * 3
+      
+      // Idle float
+      const ix = originalPositions[i3] + Math.sin(time * 0.5 + i) * 0.2
+      const iy = originalPositions[i3 + 1] + Math.cos(time * 0.3 + i) * 0.2
+      const iz = originalPositions[i3 + 2] + Math.sin(time * 0.4 + i) * 0.2
+
+      // Mouse repulsion
+      const dx = mx - ix
+      const dy = my - iy
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      
+      if (dist < 2) {
+        const force = (2 - dist) / 2
+        points[i3] += (ix - dx * force - points[i3]) * 0.1
+        points[i3 + 1] += (iy - dy * force - points[i3 + 1]) * 0.1
+      } else {
+        points[i3] += (ix - points[i3]) * 0.05
+        points[i3 + 1] += (iy - points[i3 + 1]) * 0.05
+        points[i3 + 2] += (iz - points[i3 + 2]) * 0.05
+      }
     }
+    ref.current.geometry.attributes.position.needsUpdate = true
+    ref.current.rotation.y += delta * 0.05
   })
 
   return (
@@ -155,7 +242,7 @@ function ParticleField({ count = 150 }) {
       <pointsMaterial
         vertexColors
         transparent
-        opacity={0.4}
+        opacity={0.5}
         sizeAttenuation
         depthWrite={false}
         blending={THREE.AdditiveBlending}

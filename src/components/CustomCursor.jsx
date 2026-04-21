@@ -1,9 +1,12 @@
 // src/components/CustomCursor.jsx — Premium magnetic cursor
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export default function CustomCursor() {
   const cursorRef = useRef(null)
   const followerRef = useRef(null)
+  const [isHovered, setIsHovered] = useState(false)
+  const [cursorType, setCursorType] = useState('default')
+  
   const pos = useRef({ x: -100, y: -100 })
   const followerPos = useRef({ x: -100, y: -100 })
   const rafRef = useRef(null)
@@ -19,39 +22,35 @@ export default function CustomCursor() {
 
     const animate = () => {
       // Cursor follows mouse exactly
-      cursor.style.left = pos.current.x + 'px'
-      cursor.style.top = pos.current.y + 'px'
+      if (cursor) {
+        cursor.style.transform = `translate3d(${pos.current.x}px, ${pos.current.y}px, 0)`
+      }
 
       // Follower lags behind with lerp
-      followerPos.current.x += (pos.current.x - followerPos.current.x) * 0.12
-      followerPos.current.y += (pos.current.y - followerPos.current.y) * 0.12
-      follower.style.left = followerPos.current.x + 'px'
-      follower.style.top = followerPos.current.y + 'px'
+      if (follower) {
+        followerPos.current.x += (pos.current.x - followerPos.current.x) * 0.15
+        followerPos.current.y += (pos.current.y - followerPos.current.y) * 0.15
+        follower.style.transform = `translate3d(${followerPos.current.x}px, ${followerPos.current.y}px, 0)`
+      }
 
       rafRef.current = requestAnimationFrame(animate)
     }
 
     const onEnter = (e) => {
       const type = e.currentTarget.getAttribute('data-cursor')
-      if (type === 'drag') {
-        cursor.classList.add('opacity-0')
-        follower.classList.add('cursor-drag')
-      } else {
-        cursor.classList.add('cursor-hover')
-        follower.classList.add('cursor-follower-hover')
-      }
+      setCursorType(type || 'hover')
+      setIsHovered(true)
     }
     const onLeave = () => {
-      cursor.classList.remove('cursor-hover', 'opacity-0')
-      follower.classList.remove('cursor-follower-hover', 'cursor-drag')
+      setCursorType('default')
+      setIsHovered(false)
     }
 
     window.addEventListener('mousemove', onMove, { passive: true })
     rafRef.current = requestAnimationFrame(animate)
 
-    // Dynamic interaction listener
     const updateInteractables = () => {
-      const interactables = document.querySelectorAll('a, button, [data-cursor], .swatch')
+      const interactables = document.querySelectorAll('a, button, [data-cursor], .swatch, .feature-card')
       interactables.forEach(el => {
         el.addEventListener('mouseenter', onEnter)
         el.addEventListener('mouseleave', onLeave)
@@ -61,7 +60,6 @@ export default function CustomCursor() {
 
     let interactables = updateInteractables()
 
-    // Mutation observer to handle dynamic content
     const observer = new MutationObserver(() => {
       interactables.forEach(el => {
         el.removeEventListener('mouseenter', onEnter)
@@ -85,8 +83,20 @@ export default function CustomCursor() {
 
   return (
     <>
-      <div ref={cursorRef} className="cursor" />
-      <div ref={followerRef} className="cursor-follower" />
+      <div 
+        ref={cursorRef} 
+        className={`cursor-dot ${isHovered ? 'scale-0' : 'scale-100'}`} 
+      />
+      <div 
+        ref={followerRef} 
+        className={`cursor-follower-main ${
+          cursorType === 'drag' ? 'cursor-drag-state' : 
+          isHovered ? 'cursor-hover-state' : ''
+        }`}
+      >
+        {cursorType === 'drag' && <span className="text-[10px] font-bold text-void uppercase tracking-tighter">DRAG</span>}
+        {cursorType === 'view' && <span className="text-[10px] font-bold text-void uppercase tracking-tighter">VIEW</span>}
+      </div>
     </>
   )
 }

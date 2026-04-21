@@ -27,10 +27,28 @@ const useStore = create((set) => ({
   showShare: false,
   error: null,
 
-  // ─── Camera ───
+  // ─── Auth state ───
+  user: JSON.parse(localStorage.getItem('user')) || null,
+  token: localStorage.getItem('token') || null,
+  savedDesigns: [],
+
+  // ... (previous camera state)
   autoRotate: true,
 
   // ─── Actions ───
+  setAuth: (user, token) => {
+    localStorage.setItem('user', JSON.stringify(user))
+    localStorage.setItem('token', token)
+    set({ user, token })
+  },
+  logout: () => {
+    localStorage.removeItem('user')
+    localStorage.removeItem('token')
+    set({ user: null, token: null, savedDesigns: [] })
+  },
+  setSavedDesigns: (savedDesigns) => set({ savedDesigns }),
+  addSavedDesign: (design) => set((state) => ({ savedDesigns: [design, ...state.savedDesigns] })),
+
   setColor: (color) => set({ color }),
   setTexture: (texture) => set({ texture }),
   setTextureUrl: (textureUrl) => set({ textureUrl }),
@@ -41,6 +59,9 @@ const useStore = create((set) => ({
   
   addDecal: (decal) => set((state) => ({ decals: [...state.decals, decal] })),
   removeDecal: (id) => set((state) => ({ decals: state.decals.filter(d => d.id !== id) })),
+  updateDecal: (id, updates) => set((state) => ({
+    decals: state.decals.map((d) => (d.id === id ? { ...d, ...updates } : d)),
+  })),
   clearDecals: () => set({ decals: [] }),
 
   setPrompt: (prompt) => set({ prompt }),

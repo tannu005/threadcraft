@@ -103,9 +103,17 @@ export default function Sidebar() {
             initial={{ opacity: 0, x: 12 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -12 }}
-            transition={{ duration: 0.22, ease: 'easeOut' }}
+            transition={{ duration: 0.3, ease: [0.76, 0, 0.24, 1] }}
+            whileHover={{ 
+              scale: 1.01,
+              rotateX: 1,
+              rotateY: -1,
+              transition: { duration: 0.4 }
+            }}
           >
-            {PANEL_MAP[activeTab]}
+            <div className="bg-white/2 border border-white/5 rounded-sm p-4 hover:border-acid/10 transition-colors duration-500">
+              {PANEL_MAP[activeTab]}
+            </div>
           </motion.div>
         </AnimatePresence>
       </div>

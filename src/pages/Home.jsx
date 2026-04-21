@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Loader from '../components/Loader'
 import HeroCanvas from '../components/HeroCanvas'
+import Magnetic from '../components/Magnetic'
 
 // ─── Animated counter ─────────────────────────────────────────────────────────
 function AnimatedNumber({ value, suffix = '' }) {
@@ -28,8 +29,6 @@ function AnimatedNumber({ value, suffix = '' }) {
 
   return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
 }
-
-// ─── Section: Hero ────────────────────────────────────────────────────────────
 function HeroSection() {
   const ref = useRef(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
@@ -168,18 +167,22 @@ function HeroSection() {
           </div>
 
           <div className="flex items-center gap-4">
-            <Link to="/customizer">
-              <motion.button
-                className="btn-primary text-sm px-8 py-4"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <span>START DESIGNING</span>
-              </motion.button>
-            </Link>
-            <button className="btn-outline text-sm px-7 py-3.5">
-              WATCH DEMO
-            </button>
+            <Magnetic>
+              <Link to="/customizer">
+                <motion.button
+                  className="btn-primary text-sm px-8 py-4"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <span>START DESIGNING</span>
+                </motion.button>
+              </Link>
+            </Magnetic>
+            <Magnetic>
+              <button className="btn-outline text-sm px-7 py-3.5">
+                WATCH DEMO
+              </button>
+            </Magnetic>
           </div>
         </motion.div>
 
@@ -312,7 +315,8 @@ function FeaturesSection() {
       <motion.div
         className="mb-20"
         initial={{ opacity: 0, y: 32 }}
-        animate={isInView ? { opacity: 1, y: 0 } : {}}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
         transition={{ duration: 0.8 }}
       >
         <div className="section-label mb-5">FEATURES</div>
@@ -336,8 +340,9 @@ function FeaturesSection() {
             key={f.title}
             className="feature-card glass p-7 group cursor-none"
             initial={{ opacity: 0, y: 48 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.7, delay: f.delay + 0.2 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: f.delay }}
           >
             {/* Hover glow */}
             <div
@@ -373,7 +378,7 @@ function FeaturesSection() {
 // ─── Section: Stats ───────────────────────────────────────────────────────────
 function StatsSection() {
   const ref = useRef(null)
-  const isInView = useInView(ref, { once: true })
+  const isInView = useInView(ref, { once: true, amount: 0.5 })
 
   const stats = [
     { value: '10000', suffix: '+', label: 'Designs Created' },
@@ -392,7 +397,8 @@ function StatsSection() {
               key={s.label}
               className="text-center py-4 md:px-8"
               initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
               transition={{ duration: 0.7, delay: i * 0.1 }}
             >
               <div className="font-display text-5xl md:text-6xl text-white mb-2">
@@ -445,7 +451,8 @@ function ProcessSection() {
       <motion.div
         className="mb-20"
         initial={{ opacity: 0, y: 32 }}
-        animate={isInView ? { opacity: 1, y: 0 } : {}}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
         transition={{ duration: 0.8 }}
       >
         <div className="section-label mb-5">PROCESS</div>
@@ -463,8 +470,9 @@ function ProcessSection() {
             key={step.num}
             className="relative p-8 border-b md:border-b-0 md:border-r border-smoke/50 last:border-0 group"
             initial={{ opacity: 0, y: 32 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.7, delay: i * 0.12 + 0.2 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: i * 0.12 }}
           >
             {/* Number */}
             <div className="counter-number text-7xl mb-6">{step.num}</div>
@@ -499,9 +507,6 @@ function ProcessSection() {
 
 // ─── Section: Tech Showcase ───────────────────────────────────────────────────
 function TechSection() {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true })
-
   const tech = [
     { label: 'Three.js', desc: 'WebGL 3D rendering', color: '#c8ff00' },
     { label: 'React Three Fiber', desc: 'R3F scene graph', color: '#00f0ff' },
@@ -512,12 +517,13 @@ function TechSection() {
   ]
 
   return (
-    <section ref={ref} className="py-24 px-6 md:px-10 bg-ash/30">
+    <section className="py-24 px-6 md:px-10 bg-ash/30">
       <div className="max-w-7xl mx-auto">
         <motion.div
           className="mb-12"
           initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
           transition={{ duration: 0.7 }}
         >
           <div className="section-label mb-4">BUILT WITH</div>
@@ -530,7 +536,8 @@ function TechSection() {
               key={t.label}
               className="glass p-4 rounded-sm group hover:border-acid/15 transition-all duration-300 cursor-none"
               initial={{ opacity: 0, scale: 0.9 }}
-              animate={isInView ? { opacity: 1, scale: 1 } : {}}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.07 }}
               whileHover={{ y: -3 }}
             >
@@ -547,11 +554,8 @@ function TechSection() {
 
 // ─── Section: CTA ─────────────────────────────────────────────────────────────
 function CTASection() {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true })
-
   return (
-    <section ref={ref} className="py-32 px-6 md:px-10 relative overflow-hidden">
+    <section className="py-32 px-6 md:px-10 relative overflow-hidden">
       {/* Background effects */}
       <div className="absolute inset-0 pointer-events-none">
         <div
@@ -573,7 +577,8 @@ function CTASection() {
       <div className="max-w-5xl mx-auto text-center relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 48 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
           transition={{ duration: 0.9 }}
         >
           {/* Label */}
@@ -593,15 +598,17 @@ function CTASection() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/customizer">
-              <motion.button
-                className="btn-primary text-base px-12 py-5"
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                <span>LAUNCH CUSTOMIZER</span>
-              </motion.button>
-            </Link>
+            <Magnetic>
+              <Link to="/customizer">
+                <motion.button
+                  className="btn-primary text-base px-12 py-5"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <span>LAUNCH CUSTOMIZER</span>
+                </motion.button>
+              </Link>
+            </Magnetic>
             <p className="font-mono text-xs text-chrome/25">Free to use · No signup required</p>
           </div>
         </motion.div>

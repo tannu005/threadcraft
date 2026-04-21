@@ -47,7 +47,7 @@ export default function AIPanel() {
     const loader = new THREE.TextureLoader()
     loader.load(url, (tex) => {
       tex.wrapS = tex.wrapT = THREE.RepeatWrapping
-      tex.flipY = false
+      tex.flipY = true // Standardize orientation
       tex.colorSpace = THREE.SRGBColorSpace
       tex.needsUpdate = true
       setTexture(tex)
@@ -60,13 +60,16 @@ export default function AIPanel() {
     if (!prompt.trim()) return
     setIsGenerating(true)
     setError(null)
+    console.log('[AI GEN] Starting generation with prompt:', prompt)
     try {
       const fullPrompt = `Seamless fabric texture pattern for clothing, ${prompt}, ${STYLE_MODIFIERS[aiStyle]}, flat design suitable for tiling, no text, no people, high resolution`
       const res = await axios.post('/api/generate', { prompt: fullPrompt })
+      console.log('[AI GEN] Response received:', res.data)
       const imageUrl = res.data.imageUrl
       applyImage(imageUrl)
       addGeneratedImage(imageUrl)
     } catch (err) {
+      console.error('[AI GEN] Error:', err)
       setError(err.response?.data?.error || 'Generation failed. Check your API key in .env')
     } finally {
       setIsGenerating(false)

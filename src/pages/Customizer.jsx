@@ -1,20 +1,61 @@
 // src/pages/Customizer.jsx — Premium customizer layout
-import { useRef, Suspense } from 'react'
+import { useRef, useState, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Sidebar from '../components/Sidebar'
 import Scene from '../components/Scene'
 import ShareModal from '../components/ShareModal'
+import Magnetic from '../components/Magnetic'
 import useStore from '../context/store'
+
+import axios from 'axios'
 
 // ─── Toolbar ──────────────────────────────────────────────────────────────────
 function Toolbar({ canvasRef }) {
-  const { autoRotate, setAutoRotate, setShowShare, clearTexture, color, textureUrl } = useStore()
+  const { 
+    autoRotate, setAutoRotate, setShowShare, clearTexture, 
+    color, textureUrl, decals, roughness, metalness,
+    user, token, setError
+  } = useStore()
+  const [isSaving, setIsSaving] = useState(false)
+
+  const handleSave = async () => {
+    if (!user) return setError('Please login to save your design')
+    setIsSaving(true)
+    try {
+      // Prepare config for saving
+      const config = {
+        color,
+        textureUrl,
+        roughness,
+        metalness,
+        decals: decals.map(d => ({
+          id: d.id,
+          position: d.position,
+          scale: d.scale,
+          rotation: d.rotation,
+          type: d.type,
+          text: d.text,
+          font: d.font,
+          url: d.url
+        }))
+      }
+      
+      await axios.post('/api/designs', { config }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      alert('Design saved successfully!')
+    } catch (err) {
+      setError('Failed to save design')
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   return (
     <div className="flex items-center gap-3 px-5 py-3 border-b border-smoke bg-ash/80 backdrop-blur-sm flex-shrink-0">
-      {/* Left: status */}
+      {/* ... existing code ... */}
       <div className="flex items-center gap-2.5 flex-1 min-w-0">
         <div className="relative">
           <div className="w-2 h-2 rounded-full bg-acid" />
@@ -23,21 +64,6 @@ function Toolbar({ canvasRef }) {
         <span className="font-mono text-xs tracking-widest text-chrome/35 truncate">
           CLASSIC T-SHIRT — LIVE
         </span>
-        {textureUrl && (
-          <span className="hidden md:flex items-center gap-1.5 px-2 py-0.5 border border-acid/20 rounded-sm bg-acid/5">
-            <div className="w-1.5 h-1.5 rounded-full bg-acid" />
-            <span className="font-mono text-[0.6rem] text-acid">TEXTURE ACTIVE</span>
-          </span>
-        )}
-      </div>
-
-      {/* Center: color chip */}
-      <div className="hidden lg:flex items-center gap-2.5 px-3 py-1.5 border border-smoke rounded-sm bg-void/50">
-        <div
-          className="w-3.5 h-3.5 rounded-full border border-white/10 flex-shrink-0"
-          style={{ background: color, boxShadow: `0 0 8px ${color}44` }}
-        />
-        <span className="font-mono text-xs text-chrome/30 uppercase tracking-wide">{color}</span>
       </div>
 
       {/* Right: controls */}
@@ -49,7 +75,6 @@ function Toolbar({ canvasRef }) {
               : 'border-smoke text-chrome/30 hover:border-chrome/20 hover:text-chrome/50'
           }`}
           onClick={() => setAutoRotate(!autoRotate)}
-          title="Toggle auto-rotate"
         >
           <span className={`text-base transition-transform ${autoRotate ? 'animate-spin' : ''}`} style={{ animationDuration: '3s' }}>↻</span>
           <span className="hidden sm:inline">ROTATE</span>
@@ -63,12 +88,24 @@ function Toolbar({ canvasRef }) {
           ✕
         </button>
 
-        <button
-          className="btn-primary text-xs px-5 py-2"
-          onClick={() => setShowShare(true)}
-        >
-          <span>SHARE</span>
-        </button>
+        {user && (
+          <button
+            className={`btn-outline text-[0.6rem] px-4 py-2 ${isSaving ? 'opacity-50 cursor-wait' : ''}`}
+            onClick={handleSave}
+            disabled={isSaving}
+          >
+            {isSaving ? 'SAVING...' : 'SAVE DESIGN'}
+          </button>
+        )}
+
+        <Magnetic>
+          <button
+            className="btn-primary text-[0.6rem] px-5 py-2"
+            onClick={() => setShowShare(true)}
+          >
+            <span>SHARE</span>
+          </button>
+        </Magnetic>
       </div>
     </div>
   )

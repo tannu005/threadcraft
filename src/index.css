@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Syne:wght@700;800&family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;600;800&family=Inter:wght@400;700&display=swap');
+
 /* ─── Base Reset ─── */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -49,58 +51,56 @@ body {
 }
 
 /* ─── Custom Cursor ─── */
-.cursor {
+.cursor-dot {
   position: fixed;
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   background: var(--acid);
   border-radius: 50%;
   pointer-events: none;
   z-index: 9999;
-  transform: translate(-50%, -50%);
-  transition: transform 0.08s ease, width 0.25s ease, height 0.25s ease, background 0.25s ease, border-radius 0.25s ease;
   mix-blend-mode: difference;
+  transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
-.cursor-follower {
+.cursor-follower-main {
   position: fixed;
-  width: 36px;
-  height: 36px;
-  border: 1px solid rgba(200, 255, 0, 0.35);
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(200, 255, 0, 0.4);
+  background: rgba(200, 255, 0, 0.05);
   border-radius: 50%;
   pointer-events: none;
   z-index: 9998;
-  transform: translate(-50%, -50%);
-  transition: all 0.18s cubic-bezier(0.23, 1, 0.32, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: width 0.3s cubic-bezier(0.23, 1, 0.32, 1), 
+              height 0.3s cubic-bezier(0.23, 1, 0.32, 1), 
+              background 0.3s ease, 
+              border-color 0.3s ease,
+              border-radius 0.3s ease;
+  margin-top: -20px; /* Offset to center */
+  margin-left: -20px;
 }
 
-.cursor-hover { 
-  width: 14px; 
-  height: 14px; 
-  background: var(--ice);
-}
-.cursor-follower-hover { 
-  width: 64px; 
-  height: 64px; 
-  border-color: rgba(0, 240, 255, 0.4);
-  background: rgba(0, 240, 255, 0.05);
+.cursor-hover-state {
+  width: 64px;
+  height: 64px;
+  background: rgba(200, 255, 0, 0.1);
+  border-color: var(--acid);
 }
 
-.cursor-drag {
-  width: 48px;
-  height: 48px;
-  background: transparent;
-  border: 1px solid var(--acid);
+.cursor-drag-state {
+  width: 80px;
+  height: 80px;
+  background: var(--acid);
+  border-color: var(--acid);
   border-radius: 50%;
 }
-.cursor-drag::after {
-  content: '↔';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: var(--acid);
-  font-size: 14px;
+
+.cursor-drag-state span {
+  color: var(--void);
 }
 
 /* ─── Grain Overlay ─── */

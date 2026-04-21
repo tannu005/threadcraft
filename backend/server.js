@@ -8,12 +8,23 @@ const helmet = require('helmet')
 const rateLimit = require('express-rate-limit')
 const path = require('path')
 const fs = require('fs')
+const mongoose = require('mongoose')
 
 const generateRoute = require('./routes/generate')
 const uploadRoute = require('./routes/upload')
+const authRoute = require('./routes/auth')
+const designsRoute = require('./routes/designs')
 
 const app = express()
 const PORT = process.env.PORT || 3001
+const DB = process.env.MONGODB_URI || 'mongodb://localhost:27017/threadcraft'
+
+// ─── Database Connection ─────────────────────────────────────────────────────
+mongoose.connect(DB).then(() => {
+  console.log('📦 MongoDB connected successfully')
+}).catch(err => {
+  console.error('❌ MongoDB connection error:', err.message)
+})
 
 // ─── Ensure uploads dir exists ─────────────────────────────────────────────
 const uploadsDir = path.join(__dirname, 'uploads')
@@ -51,6 +62,8 @@ app.use(morgan('dev'))
 app.use('/uploads', express.static(uploadsDir))
 
 // ─── Routes ───────────────────────────────────────────────────────────────
+app.use('/api/auth',     authRoute)
+app.use('/api/designs',  designsRoute)
 app.use('/api/generate', aiLimiter, generateRoute)
 app.use('/api/upload',   uploadRoute)
 

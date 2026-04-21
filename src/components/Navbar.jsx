@@ -1,12 +1,14 @@
 // src/components/Navbar.jsx — Premium sticky nav with ambient glow
 import { motion, useScroll, useTransform } from 'framer-motion'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import useStore from '../context/store'
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
-  const [menuOpen, setMenuOpen] = useState(false)
+  const { user, logout } = useStore()
   const location = useLocation()
+  const navigate = useNavigate()
   const isCustomizer = location.pathname === '/customizer'
 
   useEffect(() => {
@@ -15,7 +17,11 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  const navLinks = ['Gallery', 'About', 'Pricing']
+  const navLinks = [
+    { name: 'Work', path: '/work' },
+    { name: 'About', path: '/about' },
+    { name: 'Contact', path: '/contact' }
+  ]
 
   return (
     <>
@@ -53,38 +59,60 @@ export default function Navbar() {
         {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((item, i) => (
-            <motion.a
-              key={item}
-              href="#"
-              className="relative font-mono text-xs tracking-widest text-chrome/40 hover:text-chrome transition-colors duration-200 group"
+            <motion.div
+              key={item.name}
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 + i * 0.08 }}
             >
-              {item}
-              <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-acid transition-all duration-300 group-hover:w-full" />
-            </motion.a>
+              <Link
+                to={item.path}
+                className="relative font-mono text-xs tracking-widest text-chrome/40 hover:text-chrome transition-colors duration-200 group"
+              >
+                {item.name}
+                <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-acid transition-all duration-300 group-hover:w-full" />
+              </Link>
+            </motion.div>
           ))}
         </div>
 
-        {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.6 }}
-        >
-          {!isCustomizer ? (
-            <Link to="/customizer">
-              <button className="btn-primary text-sm px-6 py-3">
-                <span>DESIGN NOW</span>
-              </button>
-            </Link>
+        {/* Auth & CTA */}
+        <div className="flex items-center gap-6">
+          {!user ? (
+            <div className="hidden sm:flex items-center gap-4">
+              <Link to="/login" className="font-mono text-[0.65rem] tracking-widest text-chrome/40 hover:text-acid transition-colors">LOGIN</Link>
+              <Link to="/signup" className="btn-outline text-[0.65rem] px-4 py-2">SIGN UP</Link>
+            </div>
           ) : (
-            <Link to="/">
-              <button className="btn-outline text-xs px-5 py-2.5">← HOME</button>
-            </Link>
+            <div className="flex items-center gap-4">
+              <span className="font-mono text-[0.65rem] text-acid uppercase tracking-widest">Hi, {user.name.split(' ')[0]}</span>
+              <button 
+                onClick={() => { logout(); navigate('/') }}
+                className="font-mono text-[0.65rem] text-chrome/30 hover:text-ember transition-colors"
+              >
+                LOGOUT
+              </button>
+            </div>
           )}
-        </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            {!isCustomizer ? (
+              <Link to="/customizer">
+                <button className="btn-primary text-[0.65rem] px-5 py-2.5">
+                  <span>DESIGN NOW</span>
+                </button>
+              </Link>
+            ) : (
+              <Link to="/">
+                <button className="btn-outline text-[0.65rem] px-4 py-2">← HOME</button>
+              </Link>
+            )}
+          </motion.div>
+        </div>
       </motion.nav>
     </>
   )
